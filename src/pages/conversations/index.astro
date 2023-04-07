@@ -1,0 +1,54 @@
+---
+import * as db from "@src/utils/db";
+import Layout from "@src/components/Layout.astro";
+
+const conversations = await db.getAllConversations();
+const systemPrompts = await db.getAllSystemPrompts();
+
+if (Astro.request.method === "POST") {
+  const formData = await Astro.request.formData();
+  const conversationData = {
+    name: formData.get("name") || "Unnamed",
+    system_prompt_id: Number(formData.get("system_prompt_id")) || "",
+  } as db.Conversation;
+
+  const newConversationId = await db.createConversation(conversationData);
+  return Astro.redirect(`/conversations/${newConversationId}/`);
+}
+---
+
+<Layout>
+  <h1>Conversations</h1>
+
+  {
+    conversations.map((conversation) => (
+      <div>
+        <a href={`/conversations/${conversation.id}/`}>{conversation.name}</a>
+      </div>
+    ))
+  }
+
+  <h2>Create new</h2>
+  <form method="POST">
+    <label for="name">Name</label>
+    <input id="name" name="name" />
+    <label for="system_prompt_id">Prompt</label>
+    <select id="system_prompt_id" name="system_prompt_id">
+      {
+        systemPrompts.map((systemPrompt) => (
+          <option value={systemPrompt.id}>{systemPrompt.content}</option>
+        ))
+      }
+    </select>
+    <button type="submit">Create</button>
+  </form>
+</Layout>
+
+<style>
+  textarea {
+    width: 100%;
+    height: 100px;
+    font-family: inherit;
+    padding: 0.5rem;
+  }
+</style>

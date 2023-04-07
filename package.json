@@ -10,6 +10,8 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/netlify": "^2.2.0",
+    "@planetscale/database": "^1.7.0",
     "astro": "^2.2.0"
   }
 }

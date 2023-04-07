@@ -1,0 +1,48 @@
+---
+import Layout from "@src/components/Layout.astro";
+import * as db from "@src/utils/db";
+
+const systemPrompts = await db.getAllSystemPrompts();
+
+if (Astro.request.method === "POST") {
+  const formData = await Astro.request.formData();
+  const promptData = {
+    name: formData.get("name") || "Unnamed",
+    content: formData.get("content") || "",
+  } as db.SystemPromptInput;
+  const newPromptId = await db.createSystemPrompt(promptData);
+  return Astro.redirect(`/system-prompts/${newPromptId}/`);
+}
+---
+
+<Layout>
+  <h1>System prompts</h1>
+
+  <ul>
+    {
+      systemPrompts.map((prompt) => (
+        <li>
+          <a href={`/system-prompts/${prompt.id}/`}>{prompt.content}</a>
+        </li>
+      ))
+    }
+  </ul>
+
+  <h2>Create new</h2>
+  <form method="POST">
+    <label for="name">Name</label>
+    <input id="name" name="name" />
+    <label for="content">Prompt</label>
+    <textarea id="content" name="content"></textarea>
+    <button type="submit">Create</button>
+  </form>
+</Layout>
+
+<style>
+  textarea {
+    width: 100%;
+    height: 100px;
+    font-family: inherit;
+    padding: 0.5rem;
+  }
+</style>

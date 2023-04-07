@@ -1,0 +1,14 @@
+---
+import Layout from "@src/components/Layout.astro";
+import * as db from "@src/utils/db";
+
+const id = parseInt(Astro.params.id);
+
+const systemPrompt = await db.getSystemPromptById(id);
+---
+
+<Layout>
+  <h1>System prompt</h1>
+
+  <p>{systemPrompt.content}</p>
+</Layout>

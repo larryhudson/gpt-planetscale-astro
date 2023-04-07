@@ -1,0 +1,61 @@
+---
+import Layout from "@src/components/Layout.astro";
+import * as db from "@src/utils/db";
+
+const idParam = Astro.params.id;
+if (!idParam) return Astro.redirect("/conversations");
+
+const id = parseInt(idParam);
+
+if (Astro.request.method === "POST") {
+  const formData = await Astro.request.formData();
+  const action = formData.get("action") || "addMessage";
+  if (action === "getGptMessage") {
+    await db.getGptMessageForConversation(id);
+  } else {
+    const content = formData.get("content");
+    const messageData = {
+      type: "user",
+      content,
+      conversation_id: id,
+    } as db.Message;
+    await db.createMessage(messageData);
+  }
+}
+
+const conversation = await db.getConversationById(id);
+const messages = await db.getMessagesForConversation(id);
+---
+
+<Layout>
+  <h1>Conversation: {conversation.name}</h1>
+
+  {
+    messages.map((message) => (
+      <section>
+        <strong>{message.type}</strong>: {message.content}
+      </section>
+    ))
+  }
+
+  <form method="POST">
+    <button type="submit" name="action" value="getGptMessage"
+      >Get GPT response</button
+    >
+  </form>
+
+  <h2>Add a message to this conversation</h2>
+  <form method="POST">
+    <label>
+      Content:
+      <input type="text" name="content" />
+    </label>
+    <button type="submit">Add</button>
+  </form>
+</Layout>
+
+<style>
+  section {
+    margin-bottom: 1rem;
+  }
+</style>
