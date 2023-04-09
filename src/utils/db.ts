@@ -3,9 +3,9 @@ import { getGptMessage } from "./gpt";
 
 export function getDbConnection() {
   const config = {
-    host: import.meta.env["DATABASE_HOST"],
-    username: import.meta.env["DATABASE_USERNAME"],
-    password: import.meta.env["DATABASE_PASSWORD"],
+    host: import.meta.env.PUBLIC_DATABASE_HOST,
+    username: import.meta.env.PUBLIC_DATABASE_USERNAME,
+    password: import.meta.env.PUBLIC_DATABASE_PASSWORD,
   };
 
   return connect(config);
