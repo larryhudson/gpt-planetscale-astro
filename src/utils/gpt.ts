@@ -21,7 +21,7 @@ export async function getGptMessage({
 
   const requestUrl = `https://api.openai.com/v1/chat/completions`;
 
-  const apiKey = import.meta.env["OPENAI_API_KEY"];
+  const apiKey = import.meta.env.PUBLIC_OPENAI_API_KEY;
 
   const response = await fetch(requestUrl, {
     method: "POST",
