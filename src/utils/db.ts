@@ -99,6 +99,9 @@ export type Message = {
 };
 
 export async function createMessage(message: Message) {
+  console.log("creating message");
+  console.log(message);
+
   const db = getDbConnection();
   const query =
     "INSERT INTO messages (content, conversation_id, type) VALUES (?, ?, ?)";
