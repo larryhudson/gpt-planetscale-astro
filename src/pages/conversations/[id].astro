@@ -71,215 +71,199 @@ const messagesInGptFormat = [
     <p id="current-chat-content"></p>
   </div>
 
-  <audio controls id="audio"></audio>
-
   <form method="POST">
     <button type="submit" name="action" value="getGptMessage"
       >Get GPT response</button
     >
   </form>
 
-  <h2>Add a message to this conversation</h2>
   <form id="new-message-form" method="POST">
     <input type="hidden" name="type" value="user" />
     <label>
-      Content:
+      Write your message:
       <textarea name="content"></textarea>
     </label>
     <button type="submit">Add</button>
   </form>
 
   <script>
-    import { fetchEventSource } from "@fortaine/fetch-event-source";
+    // read out the currently selected text, using the SpeechSynthesis web API
+    // to make into a bookmarklet, copy and paste this into https://make-bookmarklets.com/
+    // MDN docs: https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis
+    async function speakContent(speakButton) {
+      try {
+        // add a buttons container to the page
+        var buttonsContainer = document.createElement("div");
+        buttonsContainer.style.position = "fixed";
+        buttonsContainer.style.top = "0";
+        buttonsContainer.style.left = "0";
+        buttonsContainer.style.zIndex = "99999";
+        buttonsContainer.style.padding = "1rem";
+        buttonsContainer.style.backgroundColor = "white";
+        buttonsContainer.style.border = "1px solid black";
 
-    const form = document.querySelector("#new-message-form");
-    if (!form) throw new Error("No form found");
+        buttonsContainer.id = "buttonsContainer";
 
-    // create a new audio stream that we will push MP3 data to
-    const mediaSource = new MediaSource();
-    const mediaUrl = URL.createObjectURL(mediaSource);
+        // add a stop button to the page
+        var stopButton = document.createElement("button");
+        stopButton.innerHTML = "Stop";
 
-    const audio = document.querySelector("#audio");
-    audio.src = mediaUrl;
+        // when the button is clicked, cancel the speech synthesis
+        stopButton.addEventListener("click", function () {
+          speechSynthesis.cancel();
+          removeButtons();
+        });
 
-    let blobs = [] as Blob[];
+        // add a button to make the utterance faster
+        var fasterButton = document.createElement("button");
+        fasterButton.innerHTML = "Faster";
 
-    let sourceBuffer = null;
+        // when the faster button is clicked, increase the rate of the utterance
+        fasterButton.addEventListener("click", function () {
+          speechSynthesis.cancel();
+          window.utteranceRate += 0.1;
+          window.utterance.rate = window.utteranceRate;
+          speechSynthesis.speak(window.utterance);
+        });
 
-    function speakSentence(sentence) {
-      const url = `/api/tts`;
-      fetch(url, {
-        method: "POST",
-        body: JSON.stringify({
-          text: sentence,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-        .then((response) => response.blob())
-        .then((blob) => {
-          blobs.push(blob);
-          const newBlob = new Blob(blobs, { type: "audio/mpeg" });
+        // if the speech rate is not set, set it to 1
+        // setting global variable so that it stays after the speech synthesis ends
+        if (!window.utteranceRate) {
+          window.utteranceRate = 1;
+        }
 
-          const newUrl = URL.createObjectURL(newBlob);
-          audio.src = newUrl;
+        // add a button to make the utterance slower
+        var slowerButton = document.createElement("button");
+        slowerButton.innerHTML = "Slower";
 
-          //   if audio is not playing, play it
-          if (audio.paused) {
-            audio.play();
+        // when the slower button is clicked, decrease the rate of the utterance
+        slowerButton.addEventListener("click", function () {
+          speechSynthesis.cancel();
+          window.utteranceRate -= 0.1;
+          window.utterance.rate = window.utteranceRate;
+          speechSynthesis.speak(window.utterance);
+        });
+
+        // add a button to pause
+        var pauseButton = document.createElement("button");
+        pauseButton.innerHTML = "Pause";
+
+        // when the pause button is clicked, pause the speech synthesis
+        pauseButton.addEventListener("click", function () {
+          // if the speech synthesis is paused, resume it
+          if (speechSynthesis.paused) {
+            speechSynthesis.resume();
+            pauseButton.innerHTML = "Pause";
+          } else {
+            speechSynthesis.pause();
+            pauseButton.innerHTML = "Play";
           }
         });
-    }
 
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const formData = new FormData(form);
-      const action = formData.get("action");
-      const content = formData.get("content");
-      const type = formData.get("type");
-      console.log({ type });
-      const chatApiUrl = `/api/chat`;
+        // add buttons to the page
+        buttonsContainer.appendChild(slowerButton);
+        buttonsContainer.appendChild(pauseButton);
+        buttonsContainer.appendChild(stopButton);
+        buttonsContainer.appendChild(fasterButton);
+        document.body.appendChild(buttonsContainer);
 
-      const previousMessageDataElement = document.querySelector(
-        "#previous-messages-data"
-      );
-      const previousMessagesData = JSON.parse(
-        previousMessageDataElement.dataset.messages
-      );
+        const textToRead = speakButton
+          .closest("[data-message-container]")
+          .querySelector("[data-content]").textContent;
 
-      const messagesToSend = [
-        ...previousMessagesData,
-        {
-          role: type,
-          content,
-        },
-      ];
+        // check if speech synthesis voices are available
+        if (!speechSynthesis.getVoices().length) {
+          await new Promise(
+            (resolve) => (speechSynthesis.onvoiceschanged = resolve)
+          );
+        }
 
-      const currentChatElement = document.querySelector(
-        "#current-chat-content"
-      );
+        const voices = speechSynthesis.getVoices();
 
-      let abortController = new AbortController();
-
-      //   save user's message to the database
-
-      const newUserMessageFormData = new FormData();
-      newUserMessageFormData.append("type", "user");
-      newUserMessageFormData.append("content", content);
-
-      await fetch(window.location.href, {
-        method: "POST",
-        body: newUserMessageFormData,
-      });
-
-      //   add user's message to the messages list
-      const newMessageElement = document.createElement("section");
-      newMessageElement.innerHTML = `<strong>user</strong>: ${content}`;
-      const messagesElement = document.querySelector("#messages");
-      messagesElement.appendChild(newMessageElement);
-
-      fetchEventSource(chatApiUrl, {
-        method: "POST",
-        body: JSON.stringify({
-          messages: messagesToSend,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        signal: abortController.signal,
-        onclose: () => {
-          console.log("should be setting it to idle");
-        },
-        onmessage: (event) => {
-          switch (event.event) {
-            case "delta": {
-              // This is a new word or chunk from the AI
-              const message = JSON.parse(event.data);
-              console.log({ message });
-              if (message?.role === "assistant") {
-                currentChatElement.textContent = "";
-                return;
-              }
-              if (message.content) {
-                const existingChat = currentChatElement?.textContent;
-                currentChatElement.textContent = existingChat + message.content;
-              }
-              break;
-            }
-            case "open": {
-              // The stream has opened and we should recieve
-              // a delta event soon. This is normally almost instant.
-              currentChatElement.textContent = "...";
-              break;
-            }
-            case "done": {
-              // When it's done, we add the message to the history
-              // and reset the current chat
-              console.log("should be setting it to done");
-              // save message to the database
-              const newGptMessageFormData = new FormData();
-
-              newGptMessageFormData.append("type", "assistant");
-              newGptMessageFormData.append(
-                "content",
-                currentChatElement.textContent
-              );
-
-              fetch(window.location.href, {
-                method: "POST",
-                body: newGptMessageFormData,
-              }).then(() => {
-                // move message to the messages list
-                const newMessageElement = document.createElement("section");
-                newMessageElement.innerHTML = `<strong>assistant</strong>: ${currentChatElement.textContent}`;
-                speakContent(currentChatElement.textContent);
-                messagesElement.appendChild(newMessageElement);
-                currentChatElement.textContent = "";
-              });
-            }
-            default:
-              break;
+        // if window.chosenVoiceURI is not set, set it
+        // setting global variable so that it stays after the speech synthesis ends
+        if (!window.chosenVoiceURI) {
+          // check if initialVoiceURI is in localStorage
+          const initialVoiceURI = localStorage.getItem("initialVoiceURI");
+          // if it is, check if it is a valid voice
+          const matchingVoice =
+            initialVoiceURI &&
+            voices.find((v) => v.voiceURI === initialVoiceURI);
+          if (matchingVoice) {
+            window.chosenVoiceURI = initialVoiceURI;
+          } else {
+            window.chosenVoiceURI = voices[0].voiceURI;
           }
-        },
-      });
-    });
+        }
 
-    const speakButtons = Array.from(
-      document.querySelectorAll("[data-action='speak']")
-    );
+        // add a label for the select dropdown
+        const label = document.createElement("label");
+        label.innerHTML = "Voice";
+        label.htmlFor = "voiceSelect";
+        buttonsContainer.appendChild(label);
 
-    speakButtons.forEach((button) => {
-      button.addEventListener("click", async () => {
-        const container = button.closest("[data-message-container]");
+        // add a select dropdown to the page with the voices as options
+        const select = document.createElement("select");
+        select.id = "voiceSelect";
 
-        const content = container.querySelector("[data-content]").textContent;
+        voices.forEach((voice) => {
+          const option = document.createElement("option");
+          option.value = voice.voiceURI;
+          option.text = voice.name;
+          if (voice.voiceURI === window.chosenVoiceURI) {
+            option.selected = true;
+          }
+          select.appendChild(option);
+        });
+        buttonsContainer.appendChild(select);
 
-        speakContent(content);
-      });
-    });
+        // when the select dropdown is changed, change the voice of the utterance
+        select.addEventListener("change", function () {
+          speechSynthesis.cancel();
+          const voice = voices.find((v) => v.voiceURI === select.value);
+          window.chosenVoiceURI = select.value;
+          window.utterance.voice = voice;
+          // save in localstorage
+          localStorage.setItem("initialVoiceURI", window.chosenVoiceURI);
+          speechSynthesis.speak(window.utterance);
+        });
 
-    async function speakContent(content) {
-      // send content to tts API URL
-      const ttsApiUrl = `/api/tts`;
+        const voice = voices.find((v) => v.voiceURI === chosenVoiceURI);
+        window.utterance = new SpeechSynthesisUtterance(textToRead);
+        window.utterance.voice = voice;
+        window.utterance.rate = window.utteranceRate;
+        speechSynthesis.speak(window.utterance);
 
-      const audioResponse = await fetch(ttsApiUrl, {
-        method: "POST",
-        body: JSON.stringify({
-          text: content,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+        function removeButtons() {
+          buttonsContainer.parentNode.removeChild(buttonsContainer);
+        }
 
-      // add the audioResponse to the mediastream
-      const blob = await audioResponse.blob();
+        function removeButtonsAfterTwoSeconds() {
+          // wait one second, because the synthesis might have been cancelled in order to change the voice, or the rate
+          setTimeout(function () {
+            // if the speech synthesis is still speaking, don't remove the buttons
+            if (speechSynthesis.speaking) {
+              return;
+            }
 
-      const audio = new Audio();
-      audio.src = URL.createObjectURL(blob);
-      audio.play();
+            // remove the buttons from the page
+            removeButtons();
+          }, 1000);
+        }
+
+        // when the speech synthesis ends, remove buttons
+        window.utterance.addEventListener("end", removeButtonsAfterTwoSeconds);
+      } catch (error) {
+        console.log("Text to speech bookmarklet did not work: ", error);
+      }
     }
+
+    const speakButtons = document.querySelectorAll("[data-action='speak']");
+    speakButtons.forEach((speakButton) => {
+      speakButton.addEventListener("click", (event) => {
+        speakContent(speakButton);
+      });
+    });
   </script>
 </Layout>
 
@@ -291,5 +275,64 @@ const messagesInGptFormat = [
   textarea {
     display: block;
     width: 100%;
+  }
+
+  /* styles for chat interface */
+  #messages {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: scroll;
+  }
+
+  #messages section {
+    margin-bottom: 1rem;
+  }
+
+  /* keep new message form fixed at bottom of screen */
+  #new-message-form {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem;
+    background: white;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* add padding so that the fixed item isn't overlapping anything */
+  body {
+    padding-bottom: 200px;
+  }
+
+  #new-message-form textarea {
+    height: 100px;
+  }
+
+  #new-message-form button {
+    margin-top: 1rem;
+  }
+
+  #current-chat-content {
+    font-weight: bold;
+  }
+
+  /* make buttons big and clickable */
+  button {
+    padding: 1rem;
+    font-size: 1.5rem;
+  }
+
+  button:active {
+    background: #eee;
+  }
+
+  button:focus {
+    outline: none;
+  }
+
+  button:disabled {
+    opacity: 0.5;
   }
 </style>
