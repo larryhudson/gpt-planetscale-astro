@@ -43,9 +43,18 @@ form.addEventListener("submit", async (event) => {
   });
 
   //   add user's message to the messages list
-  const newMessageElement = document.createElement("section");
-  newMessageElement.innerHTML = `<strong>user</strong>: ${content}`;
   const messagesElement = document.querySelector("#messages");
+  const classOnFirstMessage = messagesElement.children[0].className;
+  const newMessageElement = document.createElement("section");
+  newMessageElement.dataset.messageContainer = "";
+  newMessageElement.className = classOnFirstMessage;
+  newMessageElement.innerHTML = `<strong>user</strong>: <span data-content>${content}</span>`;
+  const newSpeakButton = document.createElement("button");
+  newSpeakButton.innerHTML = "Speak";
+  newSpeakButton.dataset.action = "speak";
+  newSpeakButton.className = classOnFirstMessage;
+  newMessageElement.appendChild(newSpeakButton);
+
   messagesElement.appendChild(newMessageElement);
 
   fetchEventSource(chatApiUrl, {
@@ -101,8 +110,14 @@ form.addEventListener("submit", async (event) => {
           }).then(() => {
             // move message to the messages list
             const newMessageElement = document.createElement("section");
-            newMessageElement.innerHTML = `<strong>assistant</strong>: ${currentChatElement.textContent}`;
-            speakContent(currentChatElement.textContent);
+            newMessageElement.dataset.messageContainer = "";
+            newMessageElement.innerHTML = `<strong>assistant</strong>: <span data-content>${currentChatElement.textContent}</span>`;
+            newMessageElement.className = classOnFirstMessage;
+            const newSpeakButton = document.createElement("button");
+            newSpeakButton.innerHTML = "Speak";
+            newSpeakButton.dataset.action = "speak";
+            newSpeakButton.className = classOnFirstMessage;
+            newMessageElement.appendChild(newSpeakButton);
             messagesElement.appendChild(newMessageElement);
             currentChatElement.textContent = "";
           });

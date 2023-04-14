@@ -202,14 +202,15 @@ const messagesInGptFormat = [
       document.querySelectorAll("[data-action='speak']")
     );
 
-    speakButtons.forEach((button) => {
-      button.addEventListener("click", async () => {
-        const container = button.closest("[data-message-container]");
+    document.addEventListener("click", (event) => {
+      const target = event.target as HTMLElement;
+      if (target.dataset.action === "speak") {
+        const container = target.closest("[data-message-container]");
 
         const content = container.querySelector("[data-content]").textContent;
 
         speakContent(content);
-      });
+      }
     });
 
     async function speakContent(content) {
