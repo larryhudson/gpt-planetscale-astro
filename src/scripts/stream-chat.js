@@ -3,43 +3,6 @@ import { fetchEventSource } from "@fortaine/fetch-event-source";
 const form = document.querySelector("#new-message-form");
 if (!form) throw new Error("No form found");
 
-// create a new audio stream that we will push MP3 data to
-const mediaSource = new MediaSource();
-const mediaUrl = URL.createObjectURL(mediaSource);
-
-const audio = document.querySelector("#audio");
-audio.src = mediaUrl;
-
-let blobs = [] as Blob[];
-
-let sourceBuffer = null;
-
-function speakSentence(sentence) {
-  const url = `/api/tts`;
-  fetch(url, {
-    method: "POST",
-    body: JSON.stringify({
-      text: sentence,
-    }),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  })
-    .then((response) => response.blob())
-    .then((blob) => {
-      blobs.push(blob);
-      const newBlob = new Blob(blobs, { type: "audio/mpeg" });
-
-      const newUrl = URL.createObjectURL(newBlob);
-      audio.src = newUrl;
-
-      //   if audio is not playing, play it
-      if (audio.paused) {
-        audio.play();
-      }
-    });
-}
-
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const formData = new FormData(form);
@@ -64,13 +27,11 @@ form.addEventListener("submit", async (event) => {
     },
   ];
 
-  const currentChatElement = document.querySelector(
-    "#current-chat-content"
-  );
+  const currentChatElement = document.querySelector("#current-chat-content");
 
   let abortController = new AbortController();
 
-  //   save user's message to the database
+  // save user's message to the database
 
   const newUserMessageFormData = new FormData();
   newUserMessageFormData.append("type", "user");
@@ -152,39 +113,3 @@ form.addEventListener("submit", async (event) => {
     },
   });
 });
-
-const speakButtons = Array.from(
-  document.querySelectorAll("[data-action='speak']")
-);
-
-speakButtons.forEach((button) => {
-  button.addEventListener("click", async () => {
-    const container = button.closest("[data-message-container]");
-
-    const content = container.querySelector("[data-content]").textContent;
-
-    speakContent(content);
-  });
-});
-
-async function speakContent(content) {
-  // send content to tts API URL
-  const ttsApiUrl = `/api/tts`;
-
-  const audioResponse = await fetch(ttsApiUrl, {
-    method: "POST",
-    body: JSON.stringify({
-      text: content,
-    }),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  // add the audioResponse to the mediastream
-  const blob = await audioResponse.blob();
-
-  const audio = new Audio();
-  audio.src = URL.createObjectURL(blob);
-  audio.play();
-}
