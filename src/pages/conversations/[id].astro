@@ -1,11 +1,14 @@
 ---
 import Layout from "@src/components/Layout.astro";
 import * as db from "@src/utils/db";
+import MarkdownIt from "markdown-it";
 
 const idParam = Astro.params.id;
 if (!idParam) return Astro.redirect("/conversations");
 
 const id = parseInt(idParam);
+
+const md = new MarkdownIt();
 
 if (Astro.request.method === "POST") {
   const formData = await Astro.request.formData();
@@ -51,7 +54,7 @@ const messagesInGptFormat = [
         {
           messages.map((message) => (
             <section data-message-container data-speaker={message.type}>
-              <span data-content>{message.content}</span>
+              <div set:html={md.render(message.content)} data-content />
               <button data-action="speak" type="button">
                 🔈
               </button>
