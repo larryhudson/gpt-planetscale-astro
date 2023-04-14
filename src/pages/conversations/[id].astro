@@ -79,8 +79,12 @@ const messagesInGptFormat = [
 
   <form id="new-message-form" method="POST">
     <input type="hidden" name="type" value="user" />
-    <!-- button with microphone emoji -->
-    <button type="button" data-action="record">🎤 Record</button>
+
+    <div class="buttons">
+      <button type="button" data-action="record">🎤 Record</button>
+      <button type="button" data-action="clear">Clear</button>
+    </div>
+
     <label>
       Write your message:
       <textarea id="new-message" name="content"></textarea>
@@ -183,6 +187,15 @@ const messagesInGptFormat = [
       window.mediaRecorder.stop();
       recordButton.textContent = "🎤 Record";
     }
+
+    // clear button should clear the input
+    const clearButton = document.querySelector("[data-action=clear]");
+    clearButton.addEventListener("click", () => {
+      const newMessageTextarea = document.querySelector(
+        "#new-message"
+      ) as HTMLTextAreaElement;
+      newMessageTextarea.value = "";
+    });
   </script>
 </Layout>
 
@@ -214,6 +227,8 @@ const messagesInGptFormat = [
     bottom: 0;
     left: 0;
     right: 0;
+    max-width: 800px;
+    margin: 0 auto;
     padding: 1rem;
     background: white;
     display: flex;
@@ -222,7 +237,7 @@ const messagesInGptFormat = [
 
   /* add padding so that the fixed item isn't overlapping anything */
   body {
-    padding-bottom: 200px;
+    padding-bottom: 300px;
   }
 
   #new-message-form textarea {
@@ -253,5 +268,18 @@ const messagesInGptFormat = [
 
   button:disabled {
     opacity: 0.5;
+  }
+
+  /* show buttons side by side, 50% each */
+  .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  textarea {
+    font-size: 16px;
   }
 </style>
