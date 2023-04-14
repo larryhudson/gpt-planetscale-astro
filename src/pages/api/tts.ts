@@ -8,11 +8,7 @@ export const post: APIRoute = async ({ request }) => {
   const { text } = await request.json();
 
   // return a stream of the audio
-  const audio = await getAudioFromText(text);
+  const audioResponse = await getAudioFromText(text);
 
-  return new Response(audio, {
-    headers: {
-      "Content-Type": "audio/mpeg",
-    },
-  });
+  return audioResponse;
 };

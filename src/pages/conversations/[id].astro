@@ -53,8 +53,8 @@ const messagesInGptFormat = [
         <section data-message-container>
           <strong>{message.type}</strong>:{" "}
           <span data-content>{message.content}</span>
-          <button data-action="select" type="button">
-            Select
+          <button data-action="speak" type="button">
+            Speak
           </button>
         </section>
       ))
@@ -196,6 +196,45 @@ const messagesInGptFormat = [
       ) as HTMLTextAreaElement;
       newMessageTextarea.value = "";
     });
+  </script>
+  <script>
+    const speakButtons = Array.from(
+      document.querySelectorAll("[data-action='speak']")
+    );
+
+    speakButtons.forEach((button) => {
+      button.addEventListener("click", async () => {
+        const container = button.closest("[data-message-container]");
+
+        const content = container.querySelector("[data-content]").textContent;
+
+        speakContent(content);
+      });
+    });
+
+    async function speakContent(content) {
+      // send content to tts API URL
+      const ttsApiUrl = `/api/tts`;
+
+      const audioResponse = await fetch(ttsApiUrl, {
+        method: "POST",
+        body: JSON.stringify({
+          text: content,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log(audioResponse);
+
+      // add the audioResponse to the mediastream
+      const blob = await audioResponse.blob();
+
+      const audio = new Audio();
+      audio.src = URL.createObjectURL(blob);
+      audio.play();
+    }
   </script>
 </Layout>
 
