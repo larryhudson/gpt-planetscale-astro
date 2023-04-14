@@ -45,52 +45,52 @@ const messagesInGptFormat = [
 ---
 
 <Layout>
-  <h1>Conversation: {conversation.name}</h1>
-
-  <div id="messages">
-    {
-      messages.map((message) => (
-        <section data-message-container>
-          <strong>{message.type}</strong>:{" "}
-          <span data-content>{message.content}</span>
-          <button data-action="speak" type="button">
-            Speak
-          </button>
-        </section>
-      ))
-    }
-  </div>
-
-  <div
-    id="previous-messages-data"
-    data-messages={JSON.stringify(messagesInGptFormat)}
-  >
-  </div>
-
-  <div id="current-chat">
-    <p id="current-chat-content"></p>
-  </div>
-
-  <form method="POST">
-    <button type="submit" name="action" value="getGptMessage"
-      >Get GPT response</button
-    >
-  </form>
-
-  <form id="new-message-form" method="POST">
-    <input type="hidden" name="type" value="user" />
-
-    <div class="buttons">
-      <button type="button" data-action="record">🎤 Record</button>
-      <button type="button" data-action="clear">Clear</button>
+  <div id="page-container">
+    <div id="messages-window">
+      <div id="messages">
+        {
+          messages.map((message) => (
+            <section data-message-container data-speaker={message.type}>
+              <span data-content>{message.content}</span>
+              <button data-action="speak" type="button">
+                🔈
+              </button>
+            </section>
+          ))
+        }
+      </div>
+      <div id="current-chat">
+        <p id="current-chat-content"></p>
+      </div>
+      <form method="POST">
+        <button type="submit" name="action" value="getGptMessage"
+          >Get GPT response</button
+        >
+      </form>
     </div>
 
-    <label>
-      Write your message:
-      <textarea id="new-message" name="content"></textarea>
-    </label>
-    <button type="submit">Add</button>
-  </form>
+    <div
+      id="previous-messages-data"
+      data-messages={JSON.stringify(messagesInGptFormat)}
+      hidden=""
+    >
+    </div>
+
+    <form id="new-message-form" method="POST">
+      <input type="hidden" name="type" value="user" />
+
+      <div class="buttons">
+        <button type="button" data-action="record">🎤 Record</button>
+        <button type="button" data-action="clear">Clear</button>
+      </div>
+
+      <label>
+        Write your message:
+        <textarea id="new-message" name="content"></textarea>
+      </label>
+      <button type="submit">Add</button>
+    </form>
+  </div>
 
   <script>
     import AudioRecorder from "audio-recorder-polyfill";
@@ -198,10 +198,6 @@ const messagesInGptFormat = [
     });
   </script>
   <script>
-    const speakButtons = Array.from(
-      document.querySelectorAll("[data-action='speak']")
-    );
-
     document.addEventListener("click", (event) => {
       const target = event.target as HTMLElement;
       if (target.dataset.action === "speak") {
@@ -241,6 +237,17 @@ const messagesInGptFormat = [
 </Layout>
 
 <style>
+  #page-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 60px);
+  }
+
+  #messages-window {
+    flex-grow: 1;
+    overflow-y: scroll;
+  }
+
   section {
     margin-bottom: 1rem;
   }
@@ -260,20 +267,6 @@ const messagesInGptFormat = [
 
   #messages section {
     margin-bottom: 1rem;
-  }
-
-  /* keep new message form fixed at bottom of screen */
-  #new-message-form {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 1rem;
-    background: white;
-    display: flex;
-    flex-direction: column;
   }
 
   /* add padding so that the fixed item isn't overlapping anything */
@@ -322,5 +315,31 @@ const messagesInGptFormat = [
   input[type="number"],
   textarea {
     font-size: 16px;
+  }
+
+  #messages {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: scroll;
+  }
+
+  #messages section {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    width: 80%;
+    max-width: 32rem;
+    position: relative;
+  }
+
+  section[data-speaker="user"] {
+    align-self: flex-end;
+    background-color: #e6f3ff;
+  }
+
+  section[data-speaker="assistant"] {
+    align-self: flex-start;
+    /* grey background color */
+    background-color: #f2f2f2;
   }
 </style>
