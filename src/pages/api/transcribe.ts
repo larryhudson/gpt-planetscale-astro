@@ -9,15 +9,16 @@ export const post: APIRoute = async ({ request }) => {
 
     // get posted mp3 file from form data
     const file = formData.get("file");
-
-    console.log(typeof file);
-
-    // convert to blob
-    console.log(file);
+    const fileExt = formData.get("fileExt");
 
     const apiFormData = new FormData();
-    apiFormData.append("file", file, "file.webm");
+    apiFormData.append("file", file, `file.${fileExt}`);
     apiFormData.append("model", "whisper-1");
+
+    console.log(apiFormData.get("file"));
+
+    console.log("file", file);
+    console.log("fileExt", fileExt);
 
     // send to transcribe api
 
