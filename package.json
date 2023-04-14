@@ -16,6 +16,7 @@
     "@planetscale/database": "^1.7.0",
     "astro": "^2.2.1",
     "audio-recorder-polyfill": "^0.4.1",
+    "html-entities": "^2.3.3",
     "microsoft-cognitiveservices-speech-sdk": "^1.27.0",
     "openai": "^3.2.1"
   }

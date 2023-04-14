@@ -1,3 +1,5 @@
+import { encode } from "html-entities";
+
 export async function getAudioFromText(text: string) {
   console.log("getting audio for text");
   console.log(text);
@@ -18,6 +20,8 @@ export async function getAudioFromText(text: string) {
       "User-Agent": "astro",
       "Ocp-Apim-Subscription-Key": AZURE_API_KEY,
     },
-    body: `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${ttsLang}"><voice name="${voiceName}">${text}</voice></speak>`,
+    body: `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${ttsLang}"><voice name="${voiceName}">${encode(
+      text
+    )}</voice></speak>`,
   });
 }
