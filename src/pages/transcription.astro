@@ -1,0 +1,79 @@
+---
+import Layout from "@src/components/Layout.astro";
+---
+
+<Layout>
+  <!-- audio recorder -->
+  <div>
+    <audio id="audio" controls></audio>
+    <button id="record">Record</button>
+    <button id="stop">Stop</button>
+    <button id="transcribe">Transcribe</button>
+  </div>
+  <div id="transcription"></div>
+</Layout>
+
+<script>
+  // audio recorder with webm
+  const record = document.getElementById("record");
+  const stop = document.getElementById("stop");
+  const audio = document.getElementById("audio");
+
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: true,
+  });
+
+  const mediaRecorder = new MediaRecorder(stream, {
+    mimeType: "audio/webm;codecs=opus",
+  });
+
+  const chunks = [];
+
+  mediaRecorder.addEventListener("dataavailable", (e) => {
+    chunks.push(e.data);
+  });
+
+  mediaRecorder.addEventListener("stop", () => {
+    window.recorderBlob = new Blob(chunks, {
+      type: "audio/webm;codecs=opus",
+    });
+    audio.src = URL.createObjectURL(window.recorderBlob);
+
+    audio.load();
+  });
+
+  record.addEventListener("click", () => {
+    mediaRecorder.start();
+  });
+
+  stop.addEventListener("click", () => {
+    mediaRecorder.stop();
+  });
+
+  // when someone clicks the 'transcribe' button, send to transcription api
+  function transcribeAudio() {
+    // get the blob from the audio element
+    const blob = window.recorderBlob;
+
+    // create file from the blob object url
+
+    // create form data
+    const formData = new FormData();
+    formData.append("file", blob);
+
+    // submit to /api/transcribe
+    fetch("/api/transcribe", {
+      method: "POST",
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        // write data to the page
+        const transcription = document.getElementById("transcription");
+        transcription.innerHTML = data.text;
+      });
+  }
+
+  const transcribeButton = document.getElementById("transcribe");
+  transcribeButton.addEventListener("click", transcribeAudio);
+</script>

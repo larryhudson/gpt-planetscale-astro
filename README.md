@@ -1,5 +1,9 @@
 # Astro Starter Kit: Minimal
 
+## To do list
+
+[] Make it so that the assistant response is streamed
+
 ```
 npm create astro@latest -- --template minimal
 ```

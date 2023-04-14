@@ -79,9 +79,11 @@ const messagesInGptFormat = [
 
   <form id="new-message-form" method="POST">
     <input type="hidden" name="type" value="user" />
+    <!-- button with microphone emoji -->
+    <button type="button" data-action="record">🎤 Record</button>
     <label>
       Write your message:
-      <textarea name="content"></textarea>
+      <textarea id="new-message" name="content"></textarea>
     </label>
     <button type="submit">Add</button>
   </form>
@@ -95,6 +97,74 @@ const messagesInGptFormat = [
         window.getSelection().selectAllChildren(contentElement);
       });
     });
+
+    const recordButton = document.querySelector("[data-action=record]");
+    recordButton.addEventListener("click", () => {
+      if (mediaRecorder.state === "recording") {
+        stopRecording();
+      } else if (mediaRecorder.state === "inactive") {
+        startRecording();
+      }
+    });
+
+    async function initialiseRecorder() {
+      // set up audio recorder and assign to global variable
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: false,
+      });
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: "audio/webm",
+      });
+      const audioChunks = [];
+
+      mediaRecorder.addEventListener("dataavailable", (event) => {
+        audioChunks.push(event.data);
+      });
+
+      window.mediaRecorder = mediaRecorder;
+      window.audioChunks = audioChunks;
+
+      mediaRecorder.addEventListener("stop", async () => {
+        const audioBlob = new Blob(audioChunks);
+
+        // make formData
+        const formData = new FormData();
+        formData.append("file", audioBlob);
+
+        // send formData to /api/transcribe
+        const response = await fetch("/api/transcribe", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await response.json();
+        const newMessageTextarea = document.querySelector(
+          "#new-message"
+        ) as HTMLTextAreaElement;
+
+        // if there's already text in the textarea, add a new line
+        if (newMessageTextarea.value) {
+          newMessageTextarea.value += "\n";
+        }
+
+        newMessageTextarea.value += data.text;
+
+        // clear the recorder
+        audioChunks.length = 0;
+      });
+    }
+
+    initialiseRecorder();
+
+    async function startRecording() {
+      mediaRecorder.start();
+      recordButton.textContent = "⏹️ Stop";
+    }
+
+    async function stopRecording() {
+      mediaRecorder.stop();
+      recordButton.textContent = "🎤 Record";
+    }
   </script>
 </Layout>
 
