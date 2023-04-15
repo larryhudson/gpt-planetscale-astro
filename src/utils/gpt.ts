@@ -66,16 +66,12 @@ export async function getGptCompletion({ messages, text }) {
       "You are given a conversation history between a user and an AI assistant. The user is in the middle of typing a message. Finish off the user's message, using context from the conversation history. Add extra details. Include the user's full message without any extra text.",
   } as SystemPrompt;
 
-  console.log(messages);
-
   const fullMessage =
     `Here is a conversation history between a user and an AI assistant. The user is in the middle of typing a message:` +
     messages
       .map((message) => `${message.type}: ${message.content}`)
       .join("\n") +
     `\nUser's half finished message: ${text}\n\nFinish off the user's message, using context from the conversation history. Add extra details. Include the user's full message without any extra text. Do not include a label for the user's message, and do not wrap the message in quotes`;
-
-  console.log({ fullMessage });
 
   const gptResponse = await sendRequestToGptApi({
     systemPrompt: completionPropmt,
