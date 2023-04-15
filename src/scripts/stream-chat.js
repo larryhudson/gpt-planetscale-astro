@@ -39,6 +39,9 @@ async function addNewUserMessage() {
     body: formData,
   });
 
+  // clear the text input
+  newMessageForm.querySelector("textarea").value = "";
+
   newMessageElement.dataset.state = "";
   return newMessageElement;
 }
