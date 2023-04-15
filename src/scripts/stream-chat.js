@@ -1,16 +1,13 @@
 function addNewMessageToPage(content, role, state) {
   // add the new message to the page
   const messagesElement = document.querySelector("#messages");
-  const classOnFirstMessage = messagesElement.children[0].className;
   const newMessageElement = document.createElement("section");
   newMessageElement.dataset.messageContainer = "";
-  newMessageElement.className = classOnFirstMessage;
   newMessageElement.dataset.speaker = role;
   newMessageElement.innerHTML = `<div data-content>${content}</div>`;
   const newSpeakButton = document.createElement("button");
   newSpeakButton.innerHTML = "Speak";
   newSpeakButton.dataset.action = "speak";
-  newSpeakButton.className = classOnFirstMessage;
   newMessageElement.appendChild(newSpeakButton);
   newMessageElement.dataset.state = state;
   messagesElement.appendChild(newMessageElement);
