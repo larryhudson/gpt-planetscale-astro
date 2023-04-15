@@ -32,19 +32,6 @@ const messages = await db.getMessagesForConversation(id);
 const systemPrompt = await db.getSystemPromptById(
   conversation.system_prompt_id
 );
-
-const messagesInGptFormat = [
-  {
-    role: "system",
-    content: systemPrompt.content,
-  },
-  ...messages.map((message) => {
-    return {
-      role: message.type,
-      content: message.content,
-    };
-  }),
-];
 ---
 
 <Layout>
@@ -62,13 +49,6 @@ const messagesInGptFormat = [
           ))
         }
       </div>
-    </div>
-
-    <div
-      id="previous-messages-data"
-      data-messages={JSON.stringify(messagesInGptFormat)}
-      hidden=""
-    >
     </div>
 
     <form id="new-message-form" method="POST">
@@ -90,6 +70,7 @@ const messagesInGptFormat = [
         <textarea id="new-message" name="content"></textarea>
       </label>
       <button type="submit">Add</button>
+      <button type="button" data-action="autocomplete">Autocomplete</button>
     </form>
   </div>
 
@@ -202,17 +183,29 @@ const messagesInGptFormat = [
     document.addEventListener("click", (event) => {
       const target = event.target as HTMLElement;
       if (target.dataset.action === "speak") {
-        const container = target.closest("[data-message-container]");
+        const containerTag = target.closest("[data-message-container]");
 
-        const content = container.querySelector("[data-content]").textContent;
-
-        speakContent(content);
+        speakContent(containerTag);
       }
     });
 
-    async function speakContent(content) {
+    async function speakContent(messageContainer) {
+      // if the message is already speaking, don't do anything
+      if (messageContainer.dataset.speaking === "true" && window.currentAudio) {
+        window.currentAudio.pause();
+        window.currentAudio.currentTime = 0;
+        messageContainer.dataset.speaking = "false";
+        return;
+      }
+
+      // set the state to speaking
+      messageContainer.dataset.speaking = "pending";
+
       // send content to tts API URL
       const ttsApiUrl = `/api/tts`;
+
+      const content =
+        messageContainer.querySelector("[data-content]").textContent;
 
       const audioResponse = await fetch(ttsApiUrl, {
         method: "POST",
@@ -232,10 +225,65 @@ const messagesInGptFormat = [
       const audio = new Audio();
       audio.src = URL.createObjectURL(blob);
       audio.play();
+
+      window.currentAudio = audio;
+
+      // set the state to speaking
+      messageContainer.dataset.speaking = "true";
+
+      // when the audio finishes, reset the state
+      audio.addEventListener("ended", () => {
+        messageContainer.dataset.speaking = "false";
+      });
     }
+
     window.speakContent = speakContent;
   </script>
   <script src="../../scripts/stream-chat.js"></script>
+  <script>
+    const newMessageTextarea = document.querySelector("#new-message");
+
+    const messages = document.querySelector("#messages");
+
+    const autocompleteButton = document.querySelector(
+      "[data-action=autocomplete]"
+    );
+
+    const autocomplete = async () => {
+      const text = newMessageTextarea.value;
+      const conversationId = document.querySelector("#conversation-id").value;
+
+      const formData = new FormData();
+
+      formData.append("text", text);
+      formData.append("conversationId", conversationId);
+      formData.append("action", "getGptCompletion");
+
+      const response = await fetch("/api/gpt", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      newMessageTextarea.dataset.previousValue = newMessageTextarea.value;
+      newMessageTextarea.value = data.text;
+
+      // add a button for undoing
+      const undoButton = document.createElement("button");
+      undoButton.textContent = "Undo";
+      undoButton.dataset.action = "undo";
+
+      autocompleteButton.after(undoButton);
+
+      undoButton.addEventListener("click", () => {
+        newMessageTextarea.value = newMessageTextarea.dataset.previousValue;
+        undoButton.remove();
+      });
+    };
+
+    autocompleteButton.addEventListener("click", autocomplete);
+  </script>
 </Layout>
 
 <style is:global>
@@ -333,5 +381,10 @@ const messagesInGptFormat = [
     align-self: flex-start;
     /* grey background color */
     background-color: #f2f2f2;
+  }
+
+  #messages section[data-speaking="true"] {
+    /* light yellow bg */
+    background-color: #fff9c4;
   }
 </style>

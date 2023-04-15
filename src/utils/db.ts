@@ -1,5 +1,5 @@
 import { connect } from "@planetscale/database";
-import { getGptMessage } from "./gpt";
+import { getGptMessage, getGptCompletion } from "./gpt";
 
 export function getDbConnection() {
   const config = {
@@ -150,4 +150,23 @@ export async function getGptMessageForConversation(conversationId: number) {
     newMessageId,
     newMessage,
   };
+}
+
+export async function getGptCompletionForConversation(
+  conversationId: number,
+  text: string
+) {
+  const db = getDbConnection();
+
+  const messagesQuery = "SELECT * FROM messages WHERE conversation_id = ?";
+  const messages = await db
+    .execute(messagesQuery, [conversationId])
+    .then((result) => result.rows as Message[]);
+
+  const gptResponse = await getGptCompletion({
+    messages,
+    text,
+  });
+
+  return { text: gptResponse };
 }

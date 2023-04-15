@@ -56,6 +56,7 @@ async function getNewAssistantMessage() {
   const formData = new FormData();
 
   formData.append("conversationId", conversationId);
+  formData.append("action", "getGptMessageForConversation");
 
   const apiResponse = await fetchAndHandleErrors(apiUrl, {
     method: "POST",
@@ -79,5 +80,5 @@ newMessageForm.addEventListener("submit", async (event) => {
 
   const newUserMessage = await addNewUserMessage();
   const newAssistantMessage = await getNewAssistantMessage();
-  speakContent(newAssistantMessage.querySelector("[data-content]").textContent);
+  speakContent(newAssistantMessage);
 });
