@@ -6,7 +6,7 @@ function addNewMessageToPage(content, role, state) {
   newMessageElement.dataset.speaker = role;
   newMessageElement.innerHTML = `<div data-content>${content}</div>`;
   const newSpeakButton = document.createElement("button");
-  newSpeakButton.innerHTML = "Speak";
+  newSpeakButton.innerHTML = "🔈";
   newSpeakButton.dataset.action = "speak";
   newMessageElement.appendChild(newSpeakButton);
   newMessageElement.dataset.state = state;
@@ -63,10 +63,11 @@ async function getNewAssistantMessage() {
     body: formData,
   });
 
-  const { newMessageId, newMessage } = await apiResponse.json();
-  const content = newMessage.content;
+  const { newMessageHtml } = await apiResponse.json();
 
-  gptMessageElement.querySelector("[data-content]").textContent = content;
+  console.log({ newMessageHtml });
+
+  gptMessageElement.querySelector("[data-content]").innerHTML = newMessageHtml;
   gptMessageElement.dataset.state = "";
 
   return gptMessageElement;

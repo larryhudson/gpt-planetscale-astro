@@ -71,7 +71,7 @@ export async function getGptCompletion({ messages, text }) {
     messages
       .map((message) => `${message.type}: ${message.content}`)
       .join("\n") +
-    `\nUser's half finished message: ${text}\n\nFinish off the user's message, using context from the conversation history. Add extra details. Include the user's full message without any extra text. Do not include a label for the user's message, and do not wrap the message in quotes`;
+    `\nUser's half finished message: ${text}\n\nFinish off the user's message, using context from the conversation history. Be succinct. Include the user's full message without any extra text. Do not include a label for the user's message, and do not wrap the message in quotes`;
 
   const gptResponse = await sendRequestToGptApi({
     systemPrompt: completionPropmt,

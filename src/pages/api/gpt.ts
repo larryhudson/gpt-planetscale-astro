@@ -2,6 +2,7 @@ import {
   getGptMessageForConversation,
   getGptCompletionForConversation,
 } from "@src/utils/db";
+import MarkdownIt from "markdown-it";
 import type { APIRoute } from "astro";
 
 export const post: APIRoute = async ({ request }) => {
@@ -13,8 +14,11 @@ export const post: APIRoute = async ({ request }) => {
   let dataToReturn;
 
   if (action === "getGptMessageForConversation") {
-    const newMessageData = await getGptMessageForConversation(conversationId);
-    dataToReturn = newMessageData;
+    const newMessage = await getGptMessageForConversation(conversationId);
+    const md = new MarkdownIt();
+    dataToReturn = {
+      newMessageHtml: md.render(newMessage.content),
+    };
   } else if (action === "getGptCompletion") {
     const text = formData.get("text");
     const completion = await getGptCompletionForConversation(

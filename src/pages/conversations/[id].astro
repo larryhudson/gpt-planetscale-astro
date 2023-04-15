@@ -88,10 +88,11 @@ const systemPrompt = await db.getSystemPromptById(
     });
 
     const recordButton = document.querySelector("[data-action=record]");
-    recordButton.addEventListener("click", () => {
-      if (window.mediaRecorder.state === "recording") {
+    recordButton.addEventListener("click", async () => {
+      if (window.mediaRecorder && window.mediaRecorder.state === "recording") {
         stopRecording();
-      } else if (window.mediaRecorder.state === "inactive") {
+      } else {
+        await initialiseRecorder();
         startRecording();
       }
     });
@@ -158,9 +159,8 @@ const systemPrompt = await db.getSystemPromptById(
       });
     }
 
-    initialiseRecorder();
-
     async function startRecording() {
+      await initialiseRecorder();
       window.mediaRecorder.start();
       recordButton.textContent = "⏹️ Stop";
     }
