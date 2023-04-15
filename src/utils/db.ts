@@ -146,5 +146,8 @@ export async function getGptMessageForConversation(conversationId: number) {
   // insert new message into database
   const newMessageId = await createMessage(newMessage);
 
-  return newMessageId;
+  return {
+    newMessageId,
+    newMessage,
+  };
 }

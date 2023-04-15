@@ -1,130 +1,83 @@
-import { fetchEventSource } from "@fortaine/fetch-event-source";
-
-const form = document.querySelector("#new-message-form");
-if (!form) throw new Error("No form found");
-
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const formData = new FormData(form);
-  const action = formData.get("action");
-  const content = formData.get("content");
-  const type = formData.get("type");
-  console.log({ type });
-  const chatApiUrl = `/api/chat`;
-
-  const previousMessageDataElement = document.querySelector(
-    "#previous-messages-data"
-  );
-  const previousMessagesData = JSON.parse(
-    previousMessageDataElement.dataset.messages
-  );
-
-  const messagesToSend = [
-    ...previousMessagesData,
-    {
-      role: type,
-      content,
-    },
-  ];
-
-  const currentChatElement = document.querySelector("#current-chat-content");
-
-  let abortController = new AbortController();
-
-  // save user's message to the database
-
-  const newUserMessageFormData = new FormData();
-  newUserMessageFormData.append("type", "user");
-  newUserMessageFormData.append("content", content);
-
-  await fetch(window.location.href, {
-    method: "POST",
-    body: newUserMessageFormData,
-  });
-
-  //   add user's message to the messages list
+function addNewMessageToPage(content, role, state) {
+  // add the new message to the page
   const messagesElement = document.querySelector("#messages");
   const classOnFirstMessage = messagesElement.children[0].className;
   const newMessageElement = document.createElement("section");
   newMessageElement.dataset.messageContainer = "";
   newMessageElement.className = classOnFirstMessage;
-  newMessageElement.innerHTML = `<strong>user</strong>: <span data-content>${content}</span>`;
+  newMessageElement.dataset.speaker = role;
+  newMessageElement.innerHTML = `<div data-content>${content}</div>`;
   const newSpeakButton = document.createElement("button");
   newSpeakButton.innerHTML = "Speak";
   newSpeakButton.dataset.action = "speak";
   newSpeakButton.className = classOnFirstMessage;
   newMessageElement.appendChild(newSpeakButton);
-
+  newMessageElement.dataset.state = state;
   messagesElement.appendChild(newMessageElement);
+  newMessageElement.scrollIntoView();
 
-  fetchEventSource(chatApiUrl, {
+  return newMessageElement;
+}
+
+async function fetchAndHandleErrors(url, options) {
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    const errorMessage = await response.text();
+    throw new Error(errorMessage);
+  }
+  return response;
+}
+
+async function addNewUserMessage() {
+  // save user's message to the database
+  const apiUrl = `/api/messages`;
+
+  const formData = new FormData(newMessageForm);
+  const content = formData.get("content");
+
+  const newMessageElement = addNewMessageToPage(content, "user", "pending");
+
+  const apiResponse = await fetchAndHandleErrors(apiUrl, {
     method: "POST",
-    body: JSON.stringify({
-      messages: messagesToSend,
-    }),
-    headers: {
-      "Content-Type": "application/json",
-    },
-    signal: abortController.signal,
-    onclose: () => {
-      console.log("should be setting it to idle");
-    },
-    onmessage: (event) => {
-      switch (event.event) {
-        case "delta": {
-          // This is a new word or chunk from the AI
-          const message = JSON.parse(event.data);
-          console.log({ message });
-          if (message?.role === "assistant") {
-            currentChatElement.textContent = "";
-            return;
-          }
-          if (message.content) {
-            const existingChat = currentChatElement?.textContent;
-            currentChatElement.textContent = existingChat + message.content;
-          }
-          break;
-        }
-        case "open": {
-          // The stream has opened and we should recieve
-          // a delta event soon. This is normally almost instant.
-          currentChatElement.textContent = "...";
-          break;
-        }
-        case "done": {
-          // When it's done, we add the message to the history
-          // and reset the current chat
-          console.log("should be setting it to done");
-          // save message to the database
-          const newGptMessageFormData = new FormData();
-
-          newGptMessageFormData.append("type", "assistant");
-          newGptMessageFormData.append(
-            "content",
-            currentChatElement.textContent
-          );
-
-          fetch(window.location.href, {
-            method: "POST",
-            body: newGptMessageFormData,
-          }).then(() => {
-            // move message to the messages list
-            const newMessageElement = document.createElement("section");
-            newMessageElement.dataset.messageContainer = "";
-            newMessageElement.innerHTML = `<strong>assistant</strong>: <span data-content>${currentChatElement.textContent}</span>`;
-            newMessageElement.className = classOnFirstMessage;
-            const newSpeakButton = document.createElement("button");
-            newSpeakButton.innerHTML = "Speak";
-            newSpeakButton.dataset.action = "speak";
-            newSpeakButton.className = classOnFirstMessage;
-            newMessageElement.appendChild(newSpeakButton);
-            messagesElement.appendChild(newMessageElement);
-            currentChatElement.textContent = "";
-          });
-        }
-        default:
-          break;
-      }
-    },
+    body: formData,
   });
+
+  newMessageElement.dataset.state = "";
+  return newMessageElement;
+}
+
+async function getNewAssistantMessage() {
+  // send a request to the API to get a new GPT message with the current conversation ID
+  const apiUrl = `/api/gpt`;
+
+  const gptMessageElement = addNewMessageToPage("...", "assistant", "pending");
+  const conversationId = document.querySelector("#conversation-id").value;
+
+  const formData = new FormData();
+
+  formData.append("conversationId", conversationId);
+
+  const apiResponse = await fetchAndHandleErrors(apiUrl, {
+    method: "POST",
+    body: formData,
+  });
+
+  const { newMessageId, newMessage } = await apiResponse.json();
+  const content = newMessage.content;
+
+  gptMessageElement.querySelector("[data-content]").textContent = content;
+  gptMessageElement.dataset.state = "";
+
+  return gptMessageElement;
+}
+
+const newMessageForm = document.querySelector("#new-message-form");
+if (!newMessageForm) throw new Error("No form found");
+
+newMessageForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const newUserMessage = await addNewUserMessage();
+  const newAssistantMessage = await getNewAssistantMessage();
+  speakContent(newAssistantMessage.querySelector("[data-content]").textContent);
 });

@@ -81,6 +81,12 @@ const messagesInGptFormat = [
 
     <form id="new-message-form" method="POST">
       <input type="hidden" name="type" value="user" />
+      <input
+        type="hidden"
+        id="conversation-id"
+        name="conversationId"
+        value={id}
+      />
 
       <div class="buttons">
         <button type="button" data-action="record">🎤 Record</button>
@@ -235,6 +241,7 @@ const messagesInGptFormat = [
       audio.src = URL.createObjectURL(blob);
       audio.play();
     }
+    window.speakContent = speakContent;
   </script>
   <script src="../../scripts/stream-chat.js"></script>
 </Layout>
