@@ -1,0 +1,39 @@
+---
+import {
+  redirectUserIfNotSuperuser,
+  getUnapprovedUsers,
+  approveUser,
+} from "@src/utils/auth";
+import Layout from "@src/components/Layout.astro";
+
+await redirectUserIfNotSuperuser(Astro);
+
+let message;
+
+if (Astro.request.method === "POST") {
+  const formData = await Astro.request.formData();
+  const { userId } = Object.fromEntries(formData.entries());
+  await approveUser({ userId });
+  message = "User approved";
+}
+
+const unapprovedUsers = await getUnapprovedUsers();
+---
+
+<Layout>
+  <h1>Unapproved Users</h1>
+  <form method="POST">
+    <ul>
+      {
+        unapprovedUsers.map((user) => (
+          <li>
+            {user.username}{" "}
+            <button type="submit" name="userId" value={user.id}>
+              Approve
+            </button>
+          </li>
+        ))
+      }
+    </ul>
+  </form>
+</Layout>

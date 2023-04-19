@@ -1,0 +1,42 @@
+---
+import Layout from "@src/components/Layout.astro";
+import { authenticateUser } from "@src/utils/auth";
+
+let loginError;
+
+// if method is POST, then login
+if (Astro.request.method === "POST") {
+  // get username and password from form
+  const formData = await Astro.request.formData();
+  const { username, password } = Object.fromEntries(formData.entries());
+
+  try {
+    const sessionId = await authenticateUser({ username, password });
+    Astro.cookies.set("session", sessionId, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: true,
+      path: "/",
+    });
+    return Astro.redirect("/?logged-in=true");
+  } catch (error) {
+    loginError = error;
+  }
+}
+---
+
+<!-- Login form -->
+<Layout>
+  <form method="POST">
+    <!-- username -->
+    <label for="username">Username</label>
+    <input type="text" name="username" id="username" />
+
+    <!-- password -->
+    <label for="password">Password</label>
+    <input type="password" name="password" id="password" />
+
+    <!-- submit -->
+    <button type="submit">Login</button>
+  </form>
+</Layout>

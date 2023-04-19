@@ -2,11 +2,20 @@
 import Layout from "@src/components/Layout.astro";
 import * as db from "@src/utils/db";
 import MarkdownIt from "markdown-it";
+import { redirectUserIfNotApproved } from "@src/utils/auth";
 
 const idParam = Astro.params.id;
 if (!idParam) return Astro.redirect("/conversations");
 
 const id = parseInt(idParam);
+
+const user = await redirectUserIfNotApproved(Astro);
+
+const conversation = await db.getConversationById(id);
+
+if (conversation.user_id !== user.id) {
+  return Astro.redirect("/conversations?reason=not-allowed");
+}
 
 const md = new MarkdownIt();
 
@@ -27,7 +36,6 @@ if (Astro.request.method === "POST") {
   }
 }
 
-const conversation = await db.getConversationById(id);
 const messages = await db.getMessagesForConversation(id);
 const systemPrompt = await db.getSystemPromptById(
   conversation.system_prompt_id

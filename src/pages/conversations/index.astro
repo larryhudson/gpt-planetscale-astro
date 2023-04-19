@@ -1,14 +1,18 @@
 ---
 import * as db from "@src/utils/db";
 import Layout from "@src/components/Layout.astro";
+import { redirectUserIfNotApproved } from "@src/utils/auth";
 
-const conversations = await db.getAllConversations();
-const systemPrompts = await db.getAllSystemPrompts();
+const { redirect, user } = await redirectUserIfNotApproved(Astro);
+if (redirect) return Astro.redirect(redirect);
+
+const conversations = await db.getConversationsForUser(user.id);
+const systemPrompts = await db.getSystemPromptsForUser(user.id);
 
 if (Astro.request.method === "POST") {
   const formData = await Astro.request.formData();
   const conversationData = {
-    name: formData.get("name") || "Unnamed",
+    name: formData.get("nam") || "Unnamed",
     system_prompt_id: Number(formData.get("system_prompt_id")) || "",
   } as db.Conversation;
 
@@ -17,7 +21,7 @@ if (Astro.request.method === "POST") {
 }
 ---
 
-<Layout>
+<Layout loggedInUsername={user.username}>
   <h1>Conversations</h1>
 
   {

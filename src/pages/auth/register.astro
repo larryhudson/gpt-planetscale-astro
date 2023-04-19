@@ -1,0 +1,61 @@
+---
+import Layout from "@src/components/Layout.astro";
+import { createUserAndLogin } from "@src/utils/auth";
+
+let loginError;
+
+// if method is POST, then login
+if (Astro.request.method === "POST") {
+  // get username and password from form
+  const formData = await Astro.request.formData();
+  const { username, email, password, confirmPassword } = Object.fromEntries(
+    formData.entries()
+  );
+
+  //   check if passwords match
+
+  try {
+    if (password !== confirmPassword) {
+      throw new Error("Passwords do not match");
+    }
+
+    // create new user and login
+    const sessionId = await createUserAndLogin({ username, email, password });
+
+    Astro.cookies.set("session", sessionId, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: true,
+    });
+
+    return Astro.redirect("/?logged-in=true");
+  } catch (error) {
+    loginError = error;
+  }
+}
+---
+
+<!-- Login form -->
+<Layout>
+  <h1>Register</h1>
+  <form method="POST">
+    <!-- username -->
+    <label for="username">Username</label>
+    <input type="text" name="username" id="username" />
+
+    <!-- email -->
+    <label for="email">Email</label>
+    <input type="email" name="email" id="email" />
+
+    <!-- password -->
+    <label for="password">Password</label>
+    <input type="password" name="password" id="password" />
+
+    <!-- confirm password -->
+    <label for="confirm-password">Confirm Password</label>
+    <input type="password" name="confirmPassword" id="confirm-password" />
+
+    <!-- submit -->
+    <button type="submit">Login</button>
+  </form>
+</Layout>

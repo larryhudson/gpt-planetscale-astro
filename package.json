@@ -16,10 +16,15 @@
     "@planetscale/database": "^1.7.0",
     "astro": "^2.2.1",
     "audio-recorder-polyfill": "^0.4.1",
+    "aws-sdk": "^2.1360.0",
+    "bcrypt": "^5.1.0",
     "html-entities": "^2.3.3",
     "markdown-it": "^13.0.1",
     "microsoft-cognitiveservices-speech-sdk": "^1.27.0",
+    "mock-aws-s3": "^4.0.2",
+    "nock": "^13.3.0",
     "openai": "^3.2.1",
-    "punycode": "^2.3.0"
+    "punycode": "^2.3.0",
+    "uuidv4": "^6.2.13"
   }
 }

@@ -1,3 +1,7 @@
+---
+const { loggedInUsername } = Astro.props;
+---
+
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -9,6 +13,18 @@
   <body>
     <div class="container">
       <header>
+        {
+          loggedInUsername ? (
+            <div>
+              Logged in as {loggedInUsername}.{" "}
+              <a href="/auth/logout/">Logout</a>
+            </div>
+          ) : (
+            <div>
+              <a href="/login/">Login</a>
+            </div>
+          )
+        }
         <nav>
           <ul>
             <li><a href="/system-prompts/">System prompts</a></li>

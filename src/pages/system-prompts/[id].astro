@@ -1,6 +1,9 @@
 ---
 import Layout from "@src/components/Layout.astro";
 import * as db from "@src/utils/db";
+import { redirectUserIfNotApproved } from "@src/utils/auth";
+
+await redirectUserIfNotApproved(Astro);
 
 const id = parseInt(Astro.params.id);
 

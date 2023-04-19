@@ -17,10 +17,10 @@ export type SystemPrompt = {
   content: string;
 };
 
-export async function getAllSystemPrompts() {
+export async function getSystemPromptsForUser(userId) {
   const db = getDbConnection();
-  const query = "SELECT * FROM system_prompts";
-  const rows = await db.execute(query).then((result) => result.rows);
+  const query = "SELECT * FROM system_prompts where user_id = ?";
+  const rows = await db.execute(query, [userId]).then((result) => result.rows);
   return rows as SystemPrompt[];
 }
 
@@ -50,10 +50,12 @@ export function deleteSystemPrompt(id: number) {
   return db.execute(query, [id]);
 }
 
-export async function getAllConversations() {
+export async function getConversationsForUser(userId) {
   const db = getDbConnection();
-  const query = "SELECT * FROM conversations";
-  const rows = await db.execute(query).then((result) => result.rows);
+  const getConversationsSql = "SELECT * FROM conversations where user_id = ?";
+  const rows = await db
+    .execute(getConversationsSql, [userId])
+    .then((result) => result.rows);
   return rows as Conversation[];
 }
 
@@ -69,6 +71,7 @@ export type Conversation = {
   id: number;
   name: string;
   system_prompt_id: number;
+  user_id: number;
 };
 
 export async function createConversation(conversation: Conversation) {
