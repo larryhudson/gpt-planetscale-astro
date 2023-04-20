@@ -32,7 +32,7 @@ export async function authenticateUser({ username, password }) {
   }
 
   // create a new session for the user
-  const sessionId = uuid();
+  const sessionId = uuidv4();
 
   const createSessionSql = `INSERT INTO sessions (session_id, user_id) VALUES (?, ?)`;
 
