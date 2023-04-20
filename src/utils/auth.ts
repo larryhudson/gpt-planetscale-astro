@@ -1,5 +1,5 @@
 import { getDbConnection } from "./db";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { uuid } from "uuidv4";
 
 export async function authenticateUser({ username, password }) {
