@@ -5,4 +5,6 @@ ALTER TABLE users ADD COLUMN superuser BOOLEAN DEFAULT 0;
 UPDATE users SET superuser = 1 WHERE id = 1;
 
 -- set approved_at column to now, for user with ID 1
-UPDATE users SET approved_at = DATETIME('now') WHERE id = 1;
+-- fix bug in the code below - I get InvalidArgument
+-- fix: 
+UPDATE users SET approved_at = CURRENT_TIMESTAMP WHERE id = 1;

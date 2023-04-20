@@ -1,0 +1,28 @@
+CREATE TABLE system_prompts (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name varchar(255) NOT NULL,
+  content varchar(10000) NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE messages (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  type varchar(255) NOT NULL,
+  conversation_id INT,
+  KEY conversation_id_idx (conversation_id),
+  content varchar(10000) NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE bookmarks (
+    id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name varchar(255) NOT NULL,
+    message_id int,
+    KEY message_id_idx (message_id),
+    conversation_id int,
+    KEY conversation_id_idx (conversation_id),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

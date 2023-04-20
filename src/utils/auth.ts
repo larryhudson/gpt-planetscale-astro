@@ -1,6 +1,6 @@
 import { getDbConnection } from "./db";
 import bcrypt from "bcryptjs";
-import { uuid } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 
 export async function authenticateUser({ username, password }) {
   // check that username and password are set

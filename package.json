@@ -21,6 +21,6 @@
     "microsoft-cognitiveservices-speech-sdk": "^1.27.0",
     "openai": "^3.2.1",
     "punycode": "^2.3.0",
-    "uuidv4": "^6.2.13"
+    "uuid": "^9.0.0"
   }
 }
