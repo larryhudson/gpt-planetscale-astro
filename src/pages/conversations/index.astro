@@ -12,8 +12,9 @@ const systemPrompts = await db.getSystemPromptsForUser(user.id);
 if (Astro.request.method === "POST") {
   const formData = await Astro.request.formData();
   const conversationData = {
-    name: formData.get("nam") || "Unnamed",
+    name: formData.get("name") || "Unnamed",
     system_prompt_id: Number(formData.get("system_prompt_id")) || "",
+    user_id: user.id,
   } as db.Conversation;
 
   const newConversationId = await db.createConversation(conversationData);
