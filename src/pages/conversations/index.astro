@@ -1,6 +1,7 @@
 ---
 import * as db from "@src/utils/db";
 import Layout from "@src/components/Layout.astro";
+import ListLink from "@src/components/ListLink.astro";
 import { redirectUserIfNotApproved } from "@src/utils/auth";
 
 const { redirect, user } = await redirectUserIfNotApproved(Astro);
@@ -25,13 +26,21 @@ if (Astro.request.method === "POST") {
 <Layout user={user}>
   <h1>Conversations</h1>
 
-  {
-    conversations.map((conversation) => (
-      <div>
-        <a href={`/conversations/${conversation.id}/`}>{conversation.name}</a>
-      </div>
-    ))
-  }
+  <p>
+    Below is your list of conversations. You can start a new conversation using
+    the form at the bottom. Before you start your first conversation, you need
+    to create a <a href="/system-prompts/">system prompt</a>.
+  </p>
+
+  <ul>
+    {
+      conversations.map((conversation) => (
+        <ListLink href={`/conversations/${conversation.id}/`}>
+          {conversation.name}
+        </ListLink>
+      ))
+    }
+  </ul>
 
   <h2>Start a new conversation</h2>
   <form method="POST">
@@ -59,5 +68,14 @@ if (Astro.request.method === "POST") {
 
   select {
     width: 100%;
+  }
+
+  li {
+    margin-bottom: 1rem;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
   }
 </style>

@@ -2,6 +2,7 @@
 import Layout from "@src/components/Layout.astro";
 import * as db from "@src/utils/db";
 import { redirectUserIfNotApproved } from "@src/utils/auth";
+import ListLink from "@src/components/ListLink.astro";
 
 const { user, redirect } = await redirectUserIfNotApproved(Astro);
 if (redirect) return redirect;
@@ -22,12 +23,18 @@ if (Astro.request.method === "POST") {
 <Layout user={user}>
   <h1>System prompts</h1>
 
+  <p>
+    System prompts are the main instructions that the AI follows when it is
+    having a conversation with you. To start a new conversation, you need to
+    choose a system prompt that will guide the AI.
+  </p>
+
   <ul>
     {
       systemPrompts.map((prompt) => (
-        <li>
-          <a href={`/system-prompts/${prompt.id}/`}>{prompt.content}</a>
-        </li>
+        <ListLink href={`/system-prompts/${prompt.id}/`}>
+          {prompt.content}
+        </ListLink>
       ))
     }
   </ul>
@@ -48,5 +55,10 @@ if (Astro.request.method === "POST") {
     height: 100px;
     font-family: inherit;
     padding: 0.5rem;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
   }
 </style>
