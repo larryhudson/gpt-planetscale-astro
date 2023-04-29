@@ -28,7 +28,13 @@ if (Astro.request.method === "POST") {
 
 <!-- Login form -->
 <Layout>
+  <p>
+    Use the form below to sign in. If you want to register, ask Larry for a
+    link.
+  </p>
   <form method="POST">
+    <!-- login error -->
+    {loginError && <p class="error">{loginError}</p>}
     <!-- username -->
     <label for="username">Username</label>
     <input type="text" name="username" id="username" />
@@ -41,3 +47,11 @@ if (Astro.request.method === "POST") {
     <button type="submit">Login</button>
   </form>
 </Layout>
+
+<style>
+  .error {
+    background-color: rgba(255, 0, 0, 0.1);
+    border: 2px solid darkred;
+    padding: 0.5rem;
+  }
+</style>

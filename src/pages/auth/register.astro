@@ -26,6 +26,7 @@ if (Astro.request.method === "POST") {
       httpOnly: true,
       sameSite: "lax",
       secure: true,
+      path: "/",
     });
 
     return Astro.redirect("/?logged-in=true");
@@ -38,24 +39,60 @@ if (Astro.request.method === "POST") {
 <!-- Login form -->
 <Layout>
   <h1>Register</h1>
+  <p>
+    Use the form below to create an account. You will not be able to use the app
+    until Larry approves your account.
+  </p>
   <form method="POST">
+    <!-- error -->
+    <div class="error">
+      <p>{loginError}</p>
+    </div>
     <!-- username -->
-    <label for="username">Username</label>
-    <input type="text" name="username" id="username" />
+    <div>
+      <label for="username">Username</label>
+      <input type="text" name="username" id="username" />
+    </div>
 
     <!-- email -->
-    <label for="email">Email</label>
-    <input type="email" name="email" id="email" />
+    <div>
+      <label for="email">Email</label>
+      <input type="email" name="email" id="email" />
+    </div>
 
     <!-- password -->
-    <label for="password">Password</label>
-    <input type="password" name="password" id="password" />
+    <div>
+      <label for="password">Password</label>
+      <input type="password" name="password" id="password" />
+    </div>
 
     <!-- confirm password -->
-    <label for="confirm-password">Confirm Password</label>
-    <input type="password" name="confirmPassword" id="confirm-password" />
+    <div>
+      <label for="confirm-password">Confirm Password</label>
+      <input type="password" name="confirmPassword" id="confirm-password" />
+    </div>
 
     <!-- submit -->
     <button type="submit">Login</button>
   </form>
 </Layout>
+
+<style>
+  /* make inputs the same size */
+  input {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1rem;
+  }
+
+  form > div {
+    margin-bottom: 1rem;
+  }
+
+  /* error */
+  .error {
+    background-color: rgba(255, 0, 0, 0.1);
+    border: 2px solid red;
+    padding: 0.5rem;
+  }
+</style>

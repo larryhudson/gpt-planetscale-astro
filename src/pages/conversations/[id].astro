@@ -10,7 +10,7 @@ if (!idParam) return Astro.redirect("/conversations");
 const id = parseInt(idParam);
 
 const { user, redirect } = await redirectUserIfNotApproved(Astro);
-if (redirect) return Astro.redirect(redirect);
+if (redirect) return redirect;
 
 const conversation = await db.getConversationById(id);
 
@@ -43,8 +43,7 @@ const systemPrompt = await db.getSystemPromptById(
 );
 ---
 
-<Layout>
-  <pre>{JSON.stringify(conversation,null,2)}</pre>
+<Layout user={user}>
   <div id="page-container">
     <div id="messages-window">
       <div id="messages">

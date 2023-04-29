@@ -4,7 +4,7 @@ import Layout from "@src/components/Layout.astro";
 import { redirectUserIfNotApproved } from "@src/utils/auth";
 
 const { redirect, user } = await redirectUserIfNotApproved(Astro);
-if (redirect) return Astro.redirect(redirect);
+if (redirect) return redirect;
 
 const conversations = await db.getConversationsForUser(user.id);
 const systemPrompts = await db.getSystemPromptsForUser(user.id);
@@ -22,7 +22,7 @@ if (Astro.request.method === "POST") {
 }
 ---
 
-<Layout loggedInUsername={user.username}>
+<Layout user={user}>
   <h1>Conversations</h1>
 
   {
@@ -33,7 +33,7 @@ if (Astro.request.method === "POST") {
     ))
   }
 
-  <h2>Create new</h2>
+  <h2>Start a new conversation</h2>
   <form method="POST">
     <label for="name">Name</label>
     <input id="name" name="name" />

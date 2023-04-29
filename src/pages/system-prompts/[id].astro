@@ -3,14 +3,15 @@ import Layout from "@src/components/Layout.astro";
 import * as db from "@src/utils/db";
 import { redirectUserIfNotApproved } from "@src/utils/auth";
 
-await redirectUserIfNotApproved(Astro);
+const { user, redirect } = await redirectUserIfNotApproved(Astro);
+if (redirect) return redirect;
 
 const id = parseInt(Astro.params.id);
 
 const systemPrompt = await db.getSystemPromptById(id);
 ---
 
-<Layout>
+<Layout user={user}>
   <h1>System prompt</h1>
 
   <p>{systemPrompt.content}</p>

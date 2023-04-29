@@ -116,21 +116,14 @@ export type User = {
   approved_at: string;
 };
 
-export async function redirectUserIfNotApproved(Astro) {
+export async function getUserFromAstro(Astro) {
   try {
     const user = await getUserFromSession(Astro.cookies.get("session").value);
 
     // if no user, redirect to login
     if (!user) {
       return {
-        redirect: "/auth/login",
-        user: null,
-      };
-    }
-
-    if (!user.approved_at) {
-      return {
-        redirect: "/auth/not-approved",
+        redirect: Astro.redirect("/auth/login"),
         user: null,
       };
     }
@@ -141,7 +134,39 @@ export async function redirectUserIfNotApproved(Astro) {
     };
   } catch (error) {
     return {
-      redirect: "/auth/login",
+      redirect: Astro.redirect("/auth/login"),
+      user: null,
+      error: error,
+    };
+  }
+}
+
+export async function redirectUserIfNotApproved(Astro) {
+  try {
+    const user = await getUserFromSession(Astro.cookies.get("session").value);
+
+    // if no user, redirect to login
+    if (!user) {
+      return {
+        redirect: Astro.redirect("/auth/login"),
+        user: null,
+      };
+    }
+
+    if (!user.approved_at) {
+      return {
+        redirect: Astro.redirect("/auth/not-approved"),
+        user: null,
+      };
+    }
+
+    return {
+      redirect: null,
+      user: user,
+    };
+  } catch (error) {
+    return {
+      redirect: Astro.redirect("/auth/login"),
       user: null,
       error: error,
     };
@@ -149,10 +174,34 @@ export async function redirectUserIfNotApproved(Astro) {
 }
 
 export async function redirectUserIfNotSuperuser(Astro) {
-  const user = await getUserFromSession(Astro.cookies.get("session").value);
+  try {
+    const user = await getUserFromSession(Astro.cookies.get("session").value);
 
-  if (!user.superuser) {
-    return Astro.redirect("/?reason=not-superuser");
+    // if no user, redirect to login
+    if (!user) {
+      return {
+        redirect: Astro.redirect("/auth/login"),
+        user: null,
+      };
+    }
+
+    if (!user.superuser) {
+      return {
+        redirect: Astro.redirect("/?reason=not-superuser"),
+        user: user,
+      };
+    }
+
+    return {
+      redirect: null,
+      user: user,
+    };
+  } catch (error) {
+    return {
+      redirect: Astro.redirect("/auth/login"),
+      user: null,
+      error: error,
+    };
   }
 }
 

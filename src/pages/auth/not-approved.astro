@@ -1,9 +1,16 @@
 ---
 import Layout from "@src/components/Layout.astro";
+import { getUserFromAstro } from "@src/utils/auth";
+
+const { user, redirect } = await getUserFromAstro(Astro);
+if (redirect) return redirect;
 ---
 
-<Layout>
+<Layout user={user}>
   <h1>You haven't been approved yet.</h1>
 
-  <p>Ask Larry to approve you.</p>
+  <p>
+    Ask Larry to approve you. Once he has done that, the web app will work for
+    you.
+  </p>
 </Layout>

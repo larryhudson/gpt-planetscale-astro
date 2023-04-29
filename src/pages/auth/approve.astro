@@ -6,7 +6,8 @@ import {
 } from "@src/utils/auth";
 import Layout from "@src/components/Layout.astro";
 
-await redirectUserIfNotSuperuser(Astro);
+const { user, redirect } = await redirectUserIfNotSuperuser(Astro);
+if (redirect) return redirect;
 
 let message;
 
@@ -20,14 +21,14 @@ if (Astro.request.method === "POST") {
 const unapprovedUsers = await getUnapprovedUsers();
 ---
 
-<Layout>
+<Layout user={user}>
   <h1>Unapproved Users</h1>
   <form method="POST">
     <ul>
       {
         unapprovedUsers.map((user) => (
           <li>
-            {user.username}{" "}
+            {user.username} (email: {user.email}){" "}
             <button type="submit" name="userId" value={user.id}>
               Approve
             </button>

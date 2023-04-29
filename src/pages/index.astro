@@ -1,17 +1,12 @@
 ---
 import { redirectUserIfNotApproved } from "@src/utils/auth";
-await redirectUserIfNotApproved(Astro);
+import Layout from "@src/components/Layout.astro";
+
+const { user, redirect } = await redirectUserIfNotApproved(Astro);
+if (redirect) return redirect;
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
-    <title>Astro</title>
-  </head>
-  <body>
-    <h1>Astro</h1>
-  </body>
-</html>
+<Layout user={user}>
+  <h1>Larry's AI chatbot</h1>
+  <p>This is a work in progress.</p>
+</Layout>

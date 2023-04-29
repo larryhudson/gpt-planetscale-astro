@@ -1,5 +1,5 @@
 ---
-const { loggedInUsername } = Astro.props;
+const { user } = Astro.props;
 ---
 
 <html lang="en">
@@ -14,14 +14,13 @@ const { loggedInUsername } = Astro.props;
     <div class="container">
       <header>
         {
-          loggedInUsername ? (
+          user ? (
             <div>
-              Logged in as {loggedInUsername}.{" "}
-              <a href="/auth/logout/">Logout</a>
+              Logged in as {user.username}. <a href="/auth/logout/">Logout</a>
             </div>
           ) : (
             <div>
-              <a href="/login/">Login</a>
+              <a href="/auth/login/">Login</a>
             </div>
           )
         }

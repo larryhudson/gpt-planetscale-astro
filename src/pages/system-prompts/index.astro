@@ -4,7 +4,7 @@ import * as db from "@src/utils/db";
 import { redirectUserIfNotApproved } from "@src/utils/auth";
 
 const { user, redirect } = await redirectUserIfNotApproved(Astro);
-if (redirect) return Astro.redirect(redirect);
+if (redirect) return redirect;
 
 const systemPrompts = await db.getSystemPromptsForUser(user.id);
 
@@ -19,7 +19,7 @@ if (Astro.request.method === "POST") {
 }
 ---
 
-<Layout>
+<Layout user={user}>
   <h1>System prompts</h1>
 
   <ul>

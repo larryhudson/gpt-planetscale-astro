@@ -1,4 +1,8 @@
 ---
-Astro.cookies.delete("session");
+console.log("should be deleting session");
+Astro.cookies.delete("session", {
+  path: "/",
+});
+console.log(Astro.cookies.get("session"));
 return Astro.redirect("/");
 ---
