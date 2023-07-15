@@ -1,0 +1,24 @@
+---
+import Layout from "@src/components/Layout.astro";
+import * as db from "@src/utils/db";
+import { redirectUserIfNotApproved } from "@src/utils/auth";
+
+const { user, redirect } = await redirectUserIfNotApproved(Astro);
+if (redirect || user === null) return redirect;
+
+const id = parseInt(Astro.params.id);
+
+const webpage = await db.getWebpageById(id);
+
+if (webpage.user_id !== user.id) {
+  return Astro.redirect("/webpages/?reason=not-allowed");
+}
+---
+
+<Layout user={user}>
+  <h1>Webpage</h1>
+
+  <p>Webpage title: {webpage.title}</p>
+
+  <p>Webpage URL: {webpage.url}</p>
+</Layout>

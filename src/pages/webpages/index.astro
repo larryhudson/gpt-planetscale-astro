@@ -1,0 +1,84 @@
+---
+import * as db from "@src/utils/db";
+import Layout from "@src/components/Layout.astro";
+import ListLink from "@src/components/ListLink.astro";
+import { redirectUserIfNotApproved } from "@src/utils/auth";
+import { addWebpageToWeaviate } from "@src/utils/weaviate";
+import { getArticleFromUrl } from "@src/utils/extract-article";
+
+const { redirect, user } = await redirectUserIfNotApproved(Astro);
+if (redirect || !user) return redirect;
+
+if (Astro.request.method === "POST") {
+  // do stuff in here to create the new webpage
+  const formData = await Astro.request.formData();
+  // go and get the article data etc.
+  const url = formData.get("url") as string;
+
+  const article = await getArticleFromUrl(url);
+
+  // add the webpage to weaviate
+  const weaviateObjectId = await addWebpageToWeaviate({
+    url,
+    title: article.title,
+    content: article.content,
+    userId: user.id,
+  });
+
+  // add the data to the database
+  const newWebpageId = await db.createWebpage({
+    url,
+    title: article.title,
+    user_id: user.id,
+    weaviate_object_id: weaviateObjectId,
+  } as db.Webpage);
+
+  // redirect to the new webpage
+  return Astro.redirect(`/webpages/${newWebpageId}/`);
+}
+
+const webpages = await db.getWebpagesForUser(user.id);
+---
+
+<Layout user={user}>
+  <h1>Webpages</h1>
+
+  <ul>
+    {
+      webpages.map((webpage) => (
+        <ListLink href={`/webpages/${webpage.id}/`}>
+          {webpage.title} (url: {webpage.url})
+        </ListLink>
+      ))
+    }
+  </ul>
+
+  <h2>Add a new webpage to the database</h2>
+  <form method="POST">
+    <label for="url">URL</label>
+    <input id="url" name="url" />
+    <button type="submit">Add</button>
+  </form>
+</Layout>
+
+<style>
+  textarea {
+    width: 100%;
+    height: 100px;
+    font-family: inherit;
+    padding: 0.5rem;
+  }
+
+  select {
+    width: 100%;
+  }
+
+  li {
+    margin-bottom: 1rem;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+</style>
