@@ -85,6 +85,45 @@ export async function createConversation(conversation: Conversation) {
   return result.insertId;
 }
 
+// same things but for webpages
+export async function getWebpagesForUser(userId) {
+  const db = getDbConnection();
+  const getConversationsSql = "SELECT * FROM webpages where user_id = ?";
+  const rows = await db
+    .execute(getConversationsSql, [userId])
+    .then((result) => result.rows);
+  return rows as Webpage[];
+}
+
+export async function getWebpageById(id: number) {
+  const db = getDbConnection();
+  const query = "SELECT * FROM webpages WHERE id = ?";
+  const rows = await db.execute(query, [id]).then((result) => result.rows);
+  return rows[0] as Webpage;
+}
+
+// define type for Webpage
+export type Webpage = {
+  id: number;
+  url: string;
+  title: string;
+  user_id: number;
+  weaviate_object_id: string;
+};
+
+export async function createWebpage(webpage: Webpage) {
+  const db = getDbConnection();
+  const query =
+    "INSERT INTO webpages (url, title, user_id, weaviate_object_id) VALUES (?, ?, ?, ?)";
+  const result = await db.execute(query, [
+    webpage.url,
+    webpage.title,
+    webpage.user_id,
+    webpage.weaviate_object_id,
+  ]);
+  return result.insertId;
+}
+
 export async function getMessagesForConversation(conversationId: number) {
   const db = getDbConnection();
   const query = "SELECT * FROM messages WHERE conversation_id = ?";
@@ -99,6 +138,7 @@ export type Message = {
   type: string;
   content: string;
   conversation_id: number;
+  
 };
 
 export async function createMessage(message: Message) {

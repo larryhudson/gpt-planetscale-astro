@@ -44,3 +44,14 @@ CREATE TABLE bookmarks (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+CREATE TABLE webpages (
+    id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    url varchar(255) NOT NULL,
+    title varchar(255) NOT NULL,
+    user_id int,
+    KEY user_id_idx (user_id),
+    weaviate_object_id varchar(255) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

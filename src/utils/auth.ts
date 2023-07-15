@@ -105,7 +105,7 @@ export async function getUserFromSession(sessionId) {
     .execute(getUserSql, [session.user_id])
     .then((result) => result.rows[0]);
 
-  return user;
+  return user as User;
 }
 
 export type User = {
@@ -210,7 +210,9 @@ export async function getUnapprovedUsers() {
 
   const getUnapprovedUsersSql = `SELECT * FROM users WHERE approved_at IS NULL`;
 
-  return await db.execute(getUnapprovedUsersSql).then((result) => result.rows);
+  return (await db
+    .execute(getUnapprovedUsersSql)
+    .then((result) => result.rows)) as User[];
 }
 
 export async function approveUser({ userId }) {
